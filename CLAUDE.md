@@ -4,53 +4,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the Cross-Platform Ollama Model Updater - a Python script that efficiently updates all installed Ollama models across Windows, macOS, and Linux platforms. The project uses only Python standard library modules (no external dependencies) and provides async operations, interactive model selection, progress tracking, and comprehensive reporting.
+This is the Cross-Platform Ollama Model Updater - a modern Python script that efficiently updates all installed Ollama models across Windows, macOS, and Linux platforms. The project is designed as a zero-dependency solution using only Python standard library modules, featuring async operations, interactive model selection, progress tracking, and comprehensive reporting.
 
-## Key Architecture
+## Architecture Overview
 
-**Core Components:**
-- `OllamaUpdater` - Main orchestrator class handling async operations, concurrency control, and platform-specific configurations
-- `ModelInfo` - Immutable dataclass for model information with size calculations and parsing utilities
-- `UpdateResult` - Progress tracking container with timing and status management
-- `EnhancedLogger` - Structured logging system with JSON export and console/file output
-- CLI interface with interactive model selection and argument parsing
+**Single-File Design:**
+The entire application is contained in `src/ollama_updater.py` (~1000+ lines) using modern Python 3.13.5+ features. This monolithic design choice ensures zero external dependencies while providing enterprise-grade functionality.
 
-**Design Patterns:**
-- Async/Await with semaphore-based concurrency control (default: 3 concurrent updates)
-- Strategy pattern for update modes (all/selective)
-- Observer pattern for progress tracking
-- Graceful signal handling for interruption
+**Core Classes:**
+- `OllamaUpdater` - Main orchestrator using async context managers and semaphore-based concurrency
+- `ModelInfo` - Immutable frozen dataclass with cached properties for memory-efficient model metadata
+- `UpdateResult` - State tracking container with datetime management and completion markers
+- `EnhancedLogger` - Memory-bounded logging using deque with automatic rotation (max 1000 entries)
+
+**Modern Python Features Used:**
+- Type aliases with `TypeAlias` annotation (PEP 613)
+- String enums (`StrEnum`) for type safety
+- Match statements for exhaustive pattern matching (Python 3.10+)
+- `Self` return type annotation for method chaining
+- `@asynccontextmanager` for resource management
+- `@cached_property` for expensive computations
+- `assert_never()` for exhaustiveness checking
+- Annotated types for parameter constraints
+
+**Concurrency Model:**
+- Asyncio-based with semaphore limiting concurrent updates (default: 3)
+- Each model update runs as isolated async task
+- Graceful cancellation via signal handlers (SIGINT/SIGTERM)
+- Exception isolation prevents cascade failures
+- Memory-efficient with automatic resource cleanup
 
 ## Development Commands
 
-**Run the updater:**
+**Run the updater interactively:**
 ```bash
 python3 src/ollama_updater.py
 ```
 
-**Test system compatibility:**
+**System verification and testing:**
 ```bash
+# Check Python version and module availability
 python3 src/ollama_updater.py --check-system
-```
 
-**List installed models:**
-```bash
+# Preview updates without executing
+python3 src/ollama_updater.py --dry-run
+
+# List and analyze installed models
 python3 src/ollama_updater.py --list-models
 ```
 
-**Dry run (preview without updating):**
+**Update operations:**
 ```bash
-python3 src/ollama_updater.py --dry-run
-```
-
-**Update all models:**
-```bash
+# Update all models (non-interactive)
 python3 src/ollama_updater.py --all
+
+# Update with specific strategy
+python3 src/ollama_updater.py --strategy selective
+
+# Performance tuning with logging
+python3 src/ollama_updater.py --max-concurrent 5 --log-file update.log --verbose
 ```
 
-**Performance tuning:**
+**Development and debugging:**
 ```bash
-python3 src/ollama_updater.py --max-concurrent 5 --log-file update.log
+# Verbose output with detailed logs
+python3 src/ollama_updater.py --verbose --log-file debug.log
+
+# Quiet mode for scripting
+python3 src/ollama_updater.py --all --quiet
+
+# Version and help information
+python3 src/ollama_updater.py --version
+python3 src/ollama_updater.py --help
 ```
 
 ## Requirements
@@ -76,9 +101,22 @@ Always test changes with:
 
 ## Key Implementation Details
 
-- Platform-specific shell configuration (handles Windows CREATE_NO_WINDOW properly)
-- Async subprocess execution with timeout handling (30 minutes per model)
-- Interactive model selection with size-based grouping (Large >10GB, Medium 1-10GB, Small <1GB)
-- JSON report generation with timestamp-based filenames
+**Modern Python Architecture (v4.0):**
+- Uses Python 3.13.5+ exclusive features with no backward compatibility
+- Type-safe design with comprehensive type aliases and enums
+- Memory-optimized with cached properties and bounded collections
+- Security-focused with parameterized subprocess calls (no shell injection)
+
+**Core Patterns:**
+- `@asynccontextmanager` for resource lifecycle management
+- Semaphore-based concurrency control with configurable limits
+- Exception hierarchy with custom `OllamaError` and `ModelUpdateError` classes
 - Signal handling for graceful shutdown on SIGINT/SIGTERM
-- Error isolation prevents cascade failures during concurrent updates
+- Profiling decorator for performance monitoring
+
+**Data Flow:**
+1. **Discovery:** Parse `ollama list` output into `ModelInfo` objects with size calculation
+2. **Selection:** Interactive UI with size-based grouping (Large >10GB, Medium 1-10GB, Small <1GB)
+3. **Execution:** Async task creation with semaphore-controlled concurrency
+4. **Tracking:** Real-time status updates via `UpdateResult` containers
+5. **Reporting:** JSON export with comprehensive metrics and structured logging

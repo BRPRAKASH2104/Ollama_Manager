@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "total_models": 6,
+    "successful": 6,
+    "failed": 0,
+    "cancelled": 0,
+    "success_rate": 100.0,
+    "total_duration": 17.89119839668274,
+    "average_update_time": 2.203866666666667
+  },
+  "successful_updates": [
+    {
+      "model": "llama3.1:8b",
+      "duration": 1.743836
+    },
+    {
+      "model": "mistral",
+      "duration": 1.647103
+    },
+    {
+      "model": "gemma:7b",
+      "duration": 1.710975
+    },
+    {
+      "model": "gpt-oss:20b",
+      "duration": 4.74774
+    },
+    {
+      "model": "llava",
+      "duration": 1.318388
+    },
+    {
+      "model": "deepseek-coder-v2:16b",
+      "duration": 2.055158
+    }
+  ],
+  "failed_updates": [],
+  "cancelled_updates": [],
+  "timestamp": "2025-08-29T01:46:37.934951+00:00",
+  "platform": {
+    "system": "Windows",
+    "python_version": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]"
+  }
+}
